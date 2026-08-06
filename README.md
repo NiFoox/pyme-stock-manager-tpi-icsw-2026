@@ -19,15 +19,15 @@ Mejorar la confiabilidad del stock, registrar movimientos y facilitar las decisi
 
 ## Tecnologías
 
-Frontend:       Angular + TypeScript
-Backend:        NestJS + TypeScript
-API:            REST
-Base de datos:  PostgreSQL
-ORM:            Prisma
-Testing:        Jest + Supertest
-Documentación:  Swagger / OpenAPI
-Repositorio:    Monorepo
-CI:             GitHub Actions
+- Frontend:       Angular + TypeScript
+- Backend:        NestJS + TypeScript
+- API:            REST
+- Base de datos:  PostgreSQL
+- ORM:            Prisma
+- Testing:        Jest + Supertest
+- Documentación:  Swagger / OpenAPI
+- Repositorio:    Monorepo
+- CI:             GitHub Actions
 
 ## Estructura
 
