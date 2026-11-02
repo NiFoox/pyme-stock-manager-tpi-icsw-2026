@@ -142,15 +142,18 @@ npm run test:api:runtime
   consulta health y termina el proceso. Comprueba ESM compilado.
 - db:check permite verificar consultas mediante el cliente compilado.
 
-[CI](../.github/workflows/ci.yml) se ejecutará en PR hacia main y admite ejecución
-manual después de publicar el workflow. Usa npm ci, build/lint/tests de ambas
+[CI](../.github/workflows/ci.yml) se ejecuta en PR hacia main y admite ejecución
+manual. Usa npm ci, build/lint/tests de ambas
 apps, PostgreSQL aislado, diagnóstico compilado y smoke HTTP compilado. Credenciales
 desechables, sin secretos del equipo. Valida Compose; el service de Actions no
 comprueba persistencia del volumen local.
 
-La existencia del workflow no demuestra una ejecución exitosa. Registrar solo
-resultados obtenidos y enlazar la ejecución remota después de la publicación
-autorizada. Ver [evidencia INFRA-01](infra-01-verificacion.md).
+CI/verify pasó en GitHub el 2 de noviembre de 2026 para el
+[PR #4](https://github.com/NiFoox/pyme-stock-manager-tpi-icsw-2026/pull/4), en la
+[ejecución 41529783324](https://github.com/NiFoox/pyme-stock-manager-tpi-icsw-2026/actions/runs/41529783324).
+Ver [evidencia INFRA-01](infra-01-verificacion.md#ci-remoto-verificado).
+El PR sigue pendiente de revisión y las advertencias moderadas de minimatch
+continúan como riesgo pendiente de seguimiento; el éxito de CI no las resuelve.
 
 ## Migraciones preparadas, sin modelos de negocio
 

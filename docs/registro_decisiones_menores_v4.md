@@ -214,5 +214,5 @@
 |---|---|---|---|
 | CFG-017 | BASE | Runtime objetivo **Node.js 26 LTS (26.13.0)** y npm incluido con esa instalación | Nuevo proyecto sin dependencias instaladas; estandarización del equipo |
 | CFG-018 | RESPALDO | Mantener Node 24 LTS disponible en NVM | Permite revertir ante incompatibilidad reproducible sin cambiar diseño |
-| QA-010 | POR VALIDAR | Ejecutar instalación, build, lint y pruebas con Node 26 antes de fijar el runtime en CI | LTS no garantiza compatibilidad específica de cada dependencia |
+| QA-010 | BASE | Instalación, build, lint y pruebas con Node 26 verificados localmente y en CI/verify el 02/11/2026 | [Evidencia de ejecución remota](infra-01-verificacion.md#ci-remoto-verificado); se mantiene el seguimiento de compatibilidad |
 | CFG-019 | BASE | En PowerShell con `npm.ps1` bloqueado, usar `npm.cmd` y `npx.cmd` o trabajar desde CMD | No es necesario relajar las políticas de ejecución de Windows |

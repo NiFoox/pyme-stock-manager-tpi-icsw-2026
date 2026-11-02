@@ -1,13 +1,15 @@
 # INFRA-01 — Verificación técnica
 
-Verificaciones iniciales: 31/10/2026. Seguimiento PostgreSQL y auditoría: 02/11/2026.
+Verificaciones iniciales: 31/10/2026. Seguimiento PostgreSQL, auditoría y CI remoto: 02/11/2026.
 Rama: chore/infra-foundation.
 Base: 18e483a (bootstrap integrado mediante PR #3).
 
-**Estado: verificaciones locales de PostgreSQL completadas; pendientes revisión y
-ejecución remota de CI. La auditoría del tooling conserva advertencias moderadas.**
-No se hicieron commits, push, PR, migraciones, modelos de negocio ni cambios
-remotos. No se modificó la bitácora del equipo.
+**Estado: verificaciones locales y CI/verify en GitHub aprobados; pendiente revisión
+del PR #4. La auditoría del tooling conserva advertencias moderadas.**
+La implementación está publicada en el [PR #4](https://github.com/NiFoox/pyme-stock-manager-tpi-icsw-2026/pull/4),
+abierto hacia main y todavía sin fusionar. Esta actualización solo registra
+evidencia documental: no ejecuta tests locales ni modifica código, dependencias,
+configuración o la bitácora del equipo; no hace nuevos commits ni push.
 
 ## Implementación y decisiones
 
@@ -30,11 +32,12 @@ remotos. No se modificó la bitácora del equipo.
 - Comandos de migración preparados, sin ejecutar cambios de esquema. La primera
   reproducción completa se comprobará con el primer modelo real aprobado.
 - Workflow para PR hacia main, con instalación, build, lint, pruebas, servicio
-  PostgreSQL aislado y verificación del runtime compilado. No se ejecutó en GitHub.
+  PostgreSQL aislado y verificación del runtime compilado. CI/verify pasó en
+  GitHub el 02/11/2026; ver [evidencia remota](#ci-remoto-verificado).
 
 ## Resultados obtenidos
 
-Los resultados de build, lint, instalación limpia, HTTP, runtime y tests unitarios
+Los resultados locales de build, lint, instalación limpia, HTTP, runtime y tests unitarios
 son los registrados el 31/10. No se repitieron esas suites el 02/11: se ejecutaron
 únicamente las comprobaciones pendientes de Docker/BD y la auditoría de dependencias.
 
@@ -63,7 +66,7 @@ son los registrados el 31/10. No se repitieron esas suites el 02/11: se ejecutar
 | Persistencia del volumen de desarrollo | 02/11: mismo clúster y volumen tras detener/iniciar, sin eliminar recursos |
 | npm audit --json | 02/11: exit code 1, 19 entradas moderadas derivadas de un único advisory de minimatch |
 | npm audit --omit=dev --json | 02/11: exit code 0, ninguna vulnerabilidad reportada en dependencias de producción |
-| Ejecución remota GitHub Actions | Pendiente de publicación autorizada |
+| Ejecución remota GitHub Actions | 02/11: workflow CI y job verify completed/success en la [ejecución 41529783324](https://github.com/NiFoox/pyme-stock-manager-tpi-icsw-2026/actions/runs/41529783324) |
 
 La copia de verificación se creó dentro de .cache, ignorada por Git, e instaló sus
 propias dependencias con npm ci. Se comprobó que prisma/config, NestJS, Prisma
@@ -73,6 +76,29 @@ a node_modules del árbol principal.
 Las pruebas HTTP y de runtime usan deliberadamente una URL de BD inalcanzable.
 Su éxito demuestra disponibilidad HTTP y carga del cliente ESM compilado; **no
 demuestra conectividad SQL**. La prueba de integración no se omite si falta la BD.
+
+## CI remoto verificado
+
+El 2 de noviembre de 2026, el workflow **CI** y su job **verify** terminaron con
+estado completed y conclusión success en GitHub Actions:
+
+- [PR #4](https://github.com/NiFoox/pyme-stock-manager-tpi-icsw-2026/pull/4):
+  chore/infra-foundation hacia main, abierto y sin fusionar.
+- [Ejecución 41529783324](https://github.com/NiFoox/pyme-stock-manager-tpi-icsw-2026/actions/runs/41529783324):
+  evento pull_request, intento 1, asociado al PR #4.
+- [Job verify](https://github.com/NiFoox/pyme-stock-manager-tpi-icsw-2026/actions/runs/41529783324/job/125566675665):
+  iniciado a las 21:36:01 UTC y finalizado a las 21:37:48 UTC del 02/11/2026.
+- Commit verificado: 3d0163498cde3f8a9ae1bcb68e57d867f18324dd.
+
+Los pasos de npm ci, validación de Compose/Prisma, build, lint, tests API, HTTP,
+web e integración PostgreSQL concluyeron con success. También pasaron la consulta
+SQL mediante Prisma/NestJS compilado y el smoke HTTP del runtime ESM compilado.
+Esto aporta evidencia de ejecución remota en Linux con Node 26.13.0, además de
+los resultados locales anteriores. No se repitieron tests locales para registrar
+esta evidencia ni se modificó el workflow.
+
+El éxito de CI no elimina las advertencias moderadas de minimatch ni sustituye
+la revisión humana del PR. El riesgo y su seguimiento permanecen documentados.
 
 ## Seguimiento local del 02/11/2026
 
@@ -172,7 +198,8 @@ su tratamiento queda explícitamente pendiente de revisión.
 - npm advierte scripts de instalación sin aprobación para seis paquetes,
   incluyendo Prisma y sus engines. No se aprobaron scripts en bloque. La
   instalación limpia, generación y build Windows funcionaron con esa política.
-  El comportamiento Linux todavía requiere la ejecución de CI.
+  El comportamiento en Linux quedó verificado por CI/verify el 02/11/2026,
+  sin que esta actualización cambie la política de scripts.
 - npm audit --json devolvió exit code 1: advisory moderado de minimatch
   [GHSA-g3hv-75wg-m249](https://github.com/advisories/GHSA-g3hv-75wg-m249) y
   propagación por herramientas de desarrollo. No se declara auditoría limpia
@@ -183,10 +210,9 @@ su tratamiento queda explícitamente pendiente de revisión.
 
 ## Pendientes para revisión y aceptación de INFRA-01
 
-1. Revisar los cambios locales y acordar el tratamiento de las advertencias de
-   seguridad del tooling. No se aplicó una actualización fuera de alcance.
-2. Tras autorización para publicar, comprobar el workflow en GitHub y agregar
-   el enlace a su ejecución. Sigue sin haber una ejecución remota verificada.
+1. Completar la revisión y aprobación del PR #4; CI remoto ya está verificado.
+2. Acordar el tratamiento y seguimiento de las advertencias moderadas de
+   minimatch en el tooling. No se aplicó una actualización fuera de alcance.
 
 La reproducción de migraciones de negocio continúa diferida hasta el primer
 modelo real aprobado; no se genera una migración artificial para cerrar este hito.
