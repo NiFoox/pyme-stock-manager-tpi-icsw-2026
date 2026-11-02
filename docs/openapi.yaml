@@ -1,0 +1,24 @@
+openapi: 3.0.3
+info:
+  title: Inventario PyME API
+  version: 0.1.0
+paths:
+  /api/health:
+    get:
+      operationId: getHealth
+      summary: Disponibilidad HTTP del proceso
+      description: No verifica conectividad ni disponibilidad de PostgreSQL.
+      security: []
+      responses:
+        "200":
+          description: El proceso puede atender solicitudes HTTP.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [status]
+                properties:
+                  status:
+                    type: string
+                    enum: [ok]

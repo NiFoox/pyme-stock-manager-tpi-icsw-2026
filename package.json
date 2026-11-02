@@ -16,6 +16,18 @@
     "lint:api": "npm run lint -w apps/api",
     "lint:web": "npm run lint -w apps/web",
     "test:api": "npm run test -w apps/api",
-    "test:web": "npm run test -w apps/web -- --watch=false"
+    "test:web": "npm run test -w apps/web -- --watch=false",
+    "test:api:e2e": "npm run test:e2e -w apps/api",
+    "test:api:integration": "npm run test:integration -w apps/api",
+    "test:api:runtime": "npm run test:runtime -w apps/api",
+    "prisma:validate": "npm run prisma:validate -w apps/api",
+    "prisma:generate": "npm run prisma:generate -w apps/api",
+    "prisma:migrate:dev": "npm run prisma:migrate:dev -w apps/api --",
+    "prisma:migrate:deploy": "npm run prisma:migrate:deploy -w apps/api --",
+    "prisma:migrate:status": "npm run prisma:migrate:status -w apps/api --",
+    "db:check": "npm run db:check -w apps/api",
+    "db:up": "docker compose up -d --wait db",
+    "db:test:up": "docker compose --profile test up -d --wait db-test",
+    "db:down": "docker compose --profile test down"
   }
 }

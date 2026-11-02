@@ -2,7 +2,7 @@
 
 **Runtime de desarrollo:** Node.js **26 LTS** (26.13.0 objetivo); Node 24 LTS como alternativa de compatibilidad.
 
-**Estado (30/10/2026):** monorepo Angular + NestJS generado y validado (build, lint, tests iniciales y arranque); base de datos y funcionalidades pendientes.
+**Estado:** bootstrap integrado mediante PR #3. INFRA-01 prepara PostgreSQL 18 en Compose, Prisma 7.10.1 y CI; resultados y limitaciones en [verificación](infra-01-verificacion.md). Los módulos de dominio y sesiones siguen pendientes.
 
 ## Objetivo y alcance
 
@@ -41,7 +41,14 @@ La estructura reemplaza la nomenclatura provisional `/backend` y `/frontend` del
 
 La API NestJS divide funciones en `Identity`, `Catalog`, `Inventory`, `Replenishment` y `Reporting`; este último calcula métricas sin tablas propias. La organización por módulo no exige capas ceremoniales para los CRUD simples.
 
-## Dominio persistido
+En INFRA-01 solo existen infraestructura de base de datos y health; no se crean
+módulos de dominio vacíos. API y web se ejecutan en el host, con PostgreSQL en
+Compose y una instancia efímera de pruebas separada. Prisma usa cliente ESM
+generado dentro de las fuentes, compilado con NodeNext. `GET /api/health` comprueba
+HTTP; un diagnóstico independiente comprueba consultas a PostgreSQL. No hay
+conexión obligatoria ni migraciones automáticas al arrancar HTTP.
+
+## Dominio previsto (pendiente de implementación)
 
 7 tablas: `users`, `categories`, `products`, `locations`, `stock_balances`, `inventory_movements`, `replenishment_policies`. Almacenamiento de sesión es infraestructura aparte. Métricas/sugerencias se calculan desde saldo, movimientos y política; no tienen entidad propia.
 

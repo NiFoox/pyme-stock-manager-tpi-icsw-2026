@@ -1,4 +1,4 @@
-# TPI Inventario PyME — Análisis de decisiones arquitectónicas v3 — recomendación técnica para implementación
+# TPI Inventario PyME — Análisis de decisiones arquitectónicas v4 — recomendación técnica para implementación
 
 **Fecha de revisión:** 29/10/2026
 **Naturaleza:** selección técnica recomendada para implementar y explicación de alternativas; **no constituye una bitácora de deliberaciones del equipo**.
@@ -242,7 +242,7 @@
 
 **Criterio.** KISS, experiencia real con monorepos, facilidad para CI, estructura legible y evolución sin anticipar librerías inexistentes.
 
-**Consecuencias.** Los comandos npm se ejecutan desde raíz mediante `-w apps/api` o `-w apps/web`. No crear `/packages` ni `common` compartido hasta justificar reutilización real. La documentación y scripts deben usar rutas nuevas. El README antiguo **no es autoridad arquitectónica** y deberá actualizarse antes del primer PR de bootstrap.
+**Consecuencias.** Los comandos npm se ejecutan desde raíz mediante `-w apps/api` o `-w apps/web`. No crear `/packages` ni `common` compartido hasta justificar reutilización real. La documentación y scripts usan las rutas nuevas desde el bootstrap integrado mediante PR #3.
 
 **Reevaluar cuando:** haya numerosas aplicaciones/librerías, builds muy costosos o dependencias entre paquetes que ameriten orquestación con cache.
 
@@ -334,7 +334,7 @@ Estas elecciones precisan aspectos de los 13 análisis previos, **sin atribuir u
 - Para la carga inicial, una cantidad 0 no necesita movimiento; ausencia de saldo equivale a cero hasta la primera operación. Si ya hubo cualquier movimiento, una discrepancia posterior se registra como ajuste.
 - Evitar que una caída de la consulta de usuario activo/rol autorice por error una sesión antigua; si no puede verificarse, rechazar.
 - El valor **148 UFP anterior es un ejercicio preliminar**, no un conteo IFPUG validado por DET/FTR/RET; no usarlo todavía como estimación formal.
-- El README actual todavía describe **cinco integrantes** y transferencias como funcionalidad principal; debe reconciliarse con el equipo real de cuatro y el backlog P1. Falta identificar qué nombre retirar, no adivinarlo.
+- El README fue reconciliado en el bootstrap: identifica cuatro integrantes y mantiene transferencias como P1. No queda pendiente retirar nombres.
 
 ### Referencias técnicas verificadas (23/10/2026; scaffold revisado el 29/10/2026)
 
@@ -353,7 +353,7 @@ Estas elecciones precisan aspectos de los 13 análisis previos, **sin atribuir u
 - **Script raíz y dependencias:** npm workspaces; scripts raíz delegan con `npm run <script> -w apps/api` y `-w apps/web`. `npm install` en la raíz después de generar los proyectos con `--skip-install`.
 - **Inicialización:** CLI NestJS *standard* en `apps/api`, modo ESM; CLI Angular en `apps/web`; ambos sin subrepositorios Git.
 - **No agregar por inercia** `packages/`, Nx, Turborepo, NestJS monorepo mode ni un conjunto vacío de módulos.
-- La estructura sustituye lo escrito en el README antiguo. La documentación del proyecto debe sincronizarse en el primer PR; **el repositorio remoto no se ha modificado** en esta revisión.
+- La estructura sustituyó lo escrito en el README antiguo; el bootstrap fue integrado mediante PR #3. Esta aclaración documental no atribuye nuevas deliberaciones al equipo.
 
 
 ## Cambio de línea base — 29/10/2026 (v4: runtime Node.js)

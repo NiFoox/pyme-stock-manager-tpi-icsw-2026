@@ -1,4 +1,4 @@
-# TPI Inventario PyME — Registro técnico de decisiones menores v3
+# TPI Inventario PyME — Registro técnico de decisiones menores v4
 
 **Actualizado:** 29/10/2026. **Estado:** inventario de decisiones de diseño discutidas/propuestas; sujeto a validación del equipo. **No es la bitácora de decisiones exigida por la cátedra.**
 
@@ -185,7 +185,7 @@
 | SEC-011 | BASE | Node.js **26 LTS (26.13.0 objetivo)** + NestJS 12.1.x+ + Angular 22 + Prisma 7.10.1 estable | Línea base actualizada el 29/10; verificar instalación/build/tests antes de dar compatibilidad por confirmada |
 | SEC-012 | FUT | Token CSRF adicional si requieren clientes/navegadores no cubiertos por protección de origen nativa | Defensa complementaria, no sustituye validación de origen |
 | CFG-009 | BASE | npm workspaces; `/apps/api`, `/apps/web`, `/docs` para monorepo | Reemplaza las rutas iniciales del README; estructura por aplicaciones |
-| CFG-010 | COND | README tiene cinco integrantes y transferencias como principal; actualizar cuando se identifique al integrante excluido y se confirme alcance P1 | Documentación debe coincidir con proyecto |
+| CFG-010 | BASE | README reconciliado en PR #3: cuatro integrantes y transferencias P1 | Documentación coincide con proyecto |
 | PLAN-013 | COND | `148 UFP` solo aproximación metodológica; verificar clasificación DET/FTR/RET y funciones elementales | Evitar falsa precisión |
 
 **Nota operativa:** Las decisiones de implementación aquí elegidas son recomendaciones técnicas concretas. La adopción/documentación oficial del grupo exige registrar su propio razonamiento, participantes y fecha real.
@@ -203,7 +203,7 @@
 | CFG-016 | BASE | Usar generadores oficiales CLI para API y web; no copiar boilerplate artesanal | Convenciones actuales y mantenimiento |
 | QA-008 | BASE | NestJS 12 **ESM** con **Vitest** y **oxlint** del scaffold; Supertest en integración HTTP | Aprovechar toolchain oficial actual |
 | QA-009 | BASE | No imponer a Angular el mismo lint o runner del backend | Cada app conserva tooling adecuado a su framework |
-| DOC-001 | COND | Actualizar README que contiene rutas viejas y cinco nombres; falta identificar el integrante excluido | No inventar identidad ni afirmar equipo falso |
+| DOC-001 | BASE | README actualizado en PR #3 con rutas apps/api, apps/web y cuatro integrantes | No queda pendiente retirar nombres |
 
 **Corrección respecto de v2:** la referencia `Jest/Supertest` y las rutas `/frontend` y `/backend` quedaron reemplazadas. Las demás decisiones de dominio no se alteran. El archivo mantiene el valor de inventario técnico, no una bitácora de discusiones ficticias.
 
