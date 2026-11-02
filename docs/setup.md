@@ -1,169 +1,186 @@
-# Guía de arranque técnico — Inventario PyME (propuesta v1)
+# Entorno de desarrollo — Inventario PyME
 
-**Actualizada:** 30/10/2026
-**Estado:** bootstrap generado y verificado localmente según las salidas de consola compartidas por el equipo. La infraestructura PostgreSQL/Prisma/CI sigue pendiente (Issue #2).
+El bootstrap Angular/NestJS fue integrado en main mediante el
+[PR #3](https://github.com/NiFoox/pyme-stock-manager-tpi-icsw-2026/pull/3).
+No volver a generar las aplicaciones. INFRA-01 corresponde al
+[Issue #2](https://github.com/NiFoox/pyme-stock-manager-tpi-icsw-2026/issues/2).
+El equipo tiene cuatro integrantes, identificados en el [README](../README.md#equipo).
 
-## 1. Baseline
+## Requisitos
 
-- Repositorio: `NiFoox/pyme-stock-manager-tpi-icsw-2026`; trabajo de bootstrap en la rama local `chore/project-bootstrap`, todavía pendiente de commit/PR.
-- Node.js **26 LTS** (26.13.0 como versión objetivo inicial); npm workspaces, **un** `package-lock.json` en la raíz, versionado.
-- `/apps/web`: Angular 22 / TypeScript, componentes standalone, organización por feature y clientes HTTP con URL relativa `/api`.
-- `/apps/api`: NestJS 12.1+ con Express; módulos `identity`, `catalog`, `inventory`, `replenishment`, `reporting`.
-- Prisma 7.10.1 **estable** (seleccionar explícitamente `prisma@7.10.1`, `@prisma/client@7.10.1` y adaptador de PostgreSQL compatible); **no** `prisma@latest` mientras la etiqueta apunte a Prisma 8 RC.
-- PostgreSQL **18** elegido para el primer entorno Docker Compose (pendiente de instalación en INFRA-01); usar migraciones SQL cuando haga falta para `CHECK`/índices por expresión.
-- `express-session` + `connect-pg-simple` con sesiones persistidas en PostgreSQL; Argon2id; CSRF nativo Nest 12.1+; HTTPS/Cookie Secure en producción.
-- Compose conceptual: `db`, `api`, `web`. Redis deliberadamente ausente.
-- No realizar migración de paquetes al azar: confirmar compatibilidad de versiones y ejecutar pruebas después de inicializar.
+- Node.js 26.13.0 y npm 11.20.0 (baseline del equipo).
+- Git, Docker Desktop con motor Linux iniciado y Docker Compose v2.
+- Puertos locales 3000 (API), 4200 (web), 5432 (BD desarrollo) y 5433 (BD pruebas).
 
-- **Scaffold backend:** proyecto NestJS 12 estándar **ESM**, con **Vitest** y **oxlint** generados; Supertest para API/integración. No habilitar NestJS monorepo mode.
-- No usar Jest como runner de la API en el bootstrap: sustituye recomendación v2. Angular 22 también admite Vitest (seleccionado explícitamente en el comando), pero conserva su propia configuración independiente de Nest.
-- Evitar `/packages`, Nx y Turborepo mientras no existan necesidades de compartir múltiples librerías u orquestar builds.
+NestJS 12 ESM/NodeNext y Angular 22 conservan su tooling: Vitest/Supertest/oxlint
+en API y Vitest/Angular ESLint en web. CLI, cliente y adaptador Prisma usan 7.10.1.
+No instalar prisma@latest.
 
-## 2. Layout propuesto
+## Preparar un checkout limpio
 
-```text
-pyme-stock-manager-tpi-icsw-2026/
-├── apps/
-│   ├── api/                           # NestJS (proyecto estándar)
-│   │   ├── prisma/
-│   │   │   ├── schema.prisma
-│   │   │   └── migrations/
-│   │   ├── src/
-│   │   │   ├── modules/                # se crean por necesidad
-│   │   │   │   ├── identity/
-│   │   │   │   ├── catalog/
-│   │   │   │   ├── inventory/
-│   │   │   │   ├── replenishment/
-│   │   │   │   └── reporting/
-│   │   │   ├── database/
-│   │   │   ├── common/
-│   │   │   ├── app.module.ts
-│   │   │   └── main.ts
-│   │   ├── test/
-│   │   └── package.json
-│   └── web/                           # Angular (proyecto estándar)
-│       ├── src/app/
-│       │   ├── core/
-│       │   ├── features/
-│       │   │   ├── auth/
-│       │   │   ├── catalog/
-│       │   │   ├── inventory/
-│       │   │   ├── replenishment/
-│       │   │   └── reports/
-│       │   └── shared/
-│       ├── angular.json
-│       └── package.json
-├── docs/
-│   ├── analisis_decisiones_arquitectonicas_v4.md
-│   ├── registro_decisiones_menores_v4.md
-│   ├── arquitectura.md
-│   └── setup.md
-├── .github/workflows/
-├── compose.yml
-├── .env.example
-├── package.json                    # { private: true, workspaces: ["apps/*"] }
-├── package-lock.json               # lockfile único, generado por npm install raíz
-└── README.md
-```
+Todos los comandos npm se ejecutan desde la raíz. En PowerShell usar npm.cmd si
+la política local bloquea npm.ps1; no es necesario cambiar esa política.
 
-No crear carpetas vacías solo para cumplir un organigrama: aparecen cuando haya código real.
+1. Copiar [.env.example](../.env.example) a .env y
+   [apps/api/.env.example](../apps/api/.env.example) a apps/api/.env.
+   PowerShell: Copy-Item .env.example .env y Copy-Item apps/api/.env.example apps/api/.env.
+   Copiar únicamente si los archivos de destino no existen.
+2. Reemplazar los marcadores de contraseña por valores locales independientes.
+   Completar las URL de la API con esas credenciales y los puertos elegidos.
+3. Instalar y preparar el cliente:
 
-## 3. Orden de implementación
+~~~
+npm ci
+npm run prisma:validate
+npm run prisma:generate
+npm run db:up
+npm run build:api
+npm run db:check
+~~~
 
-1. Crear rama `chore/project-bootstrap`; no trabajar directamente en main.
-2. Establecer Node 26 LTS; generar NestJS estándar ESM y Angular (ambos con `--skip-install`/`--skip-git`); configurar npm workspaces raíz e instalar **desde raíz** con un solo lockfile.
-3. Primer health endpoint `GET /api/health` sin autenticación: verificar HTTP, build, lint y arranque.
-4. Configuración `DATABASE_URL` desde `.env.example`; PostgreSQL con healthcheck y volumen persistente.
-5. Prisma 7 stable + `@prisma/adapter-pg`: conexión y primera migración pequeña (no crear siete tablas sin tests de integración).
-6. Tests de smoke/build/lint en GitHub Actions: API con Vitest/oxlint, web con scripts efectivamente generados/configurados.
-7. Primera vertical funcional: sesión login → crear producto → ubicación → registrar saldo inicial/entrada → consultar stock/movimientos, con pruebas de transacción.
-8. Después PR y rotación. Transferencia P1, Redis, BullMQ, JWT evolutivo quedan fuera de v1.
+npm ci utiliza únicamente [package-lock.json](../package-lock.json). Build y
+arranque de desarrollo generan el cliente antes de usarlo; no requieren artefactos
+de otro checkout. Generar no necesita PostgreSQL disponible; los comandos de BD
+sí necesitan URL válida y conectividad.
 
-## 3.1. Referencia de bootstrap desde CMD en Windows (ya realizado; no repetir la generación)
+La configuración está en [prisma.config.ts](../apps/api/prisma.config.ts) y el
+esquema en [schema.prisma](../apps/api/prisma/schema.prisma), sin modelos ni tablas
+de prueba. No usar flags de generación tomados de otras versiones sin comprobarlos.
 
-El equipo seleccionó **Node.js 26 LTS**, comenzando con **26.13.0**. Como ya se creó la rama `chore/project-bootstrap`, **no repetir** `git switch -c`; confirmar la rama actual. Si Node 26 todavía no está instalado, abrir **CMD como administrador** y usar `nvm install 26.13.0` y `nvm use 26.13.0`. Conservar la instalación 24 LTS por si se necesitara volver temporalmente.
+## Variables y red
 
-```cmd
-REM Desde la raiz del repositorio, con CMD:
-git status -sb
-node -v
-npm -v
-npx -v
-docker compose version
+| Consumidor | Configuración | Dirección PostgreSQL |
+|---|---|---|
+| Compose | .env raíz: POSTGRES_* | Puerto interno 5432 |
+| API y Prisma CLI en el host | apps/api/.env: DATABASE_URL | 127.0.0.1:5432 por defecto |
+| Integración local | TEST_DATABASE_URL | 127.0.0.1:5433/inventario_test |
+| CI sobre runner Ubuntu | Variables del workflow | 127.0.0.1:5432/inventario_test |
+| Futura API en contenedor | Variables del proceso | db:5432 (fuera de este hito) |
 
-REM Solo si no existe la carpeta apps:
-mkdir apps
-cd apps
+Compose carga el archivo raíz para interpolar variables. API y CLI cargan
+explícitamente el archivo de la API. Las variables del proceso tienen prioridad.
+Las rutas no dependen del directorio de invocación. No hay expansión entre
+archivos: escribir URL completas y codificar caracteres especiales de
+usuario/password. Nunca incluir URL de BD en Angular.
 
-REM Generar proyectos independientes con los CLIs oficiales.
-REM NestJS 12: elegir ESM cuando el CLI lo pregunte.
-npx --yes @nestjs/cli@12 new api --skip-install --skip-git --package-manager npm --no-observe
-npx --yes @angular/cli@22 new web --skip-install --skip-git --routing --style=scss --ssr=false --test-runner=vitest --defaults
+DATABASE_URL exige protocolo postgresql/postgres, usuario, contraseña y base.
+PORT es un entero entre 1 y 65535; NODE_ENV admite development, test y production.
+Los errores de configuración no imprimen valores secretos.
 
-cd ..
-```
+Los archivos .env reales y el cliente generado no se versionan. Las credenciales
+de Compose son para desarrollo/pruebas. El despliegue deberá definir permisos
+mínimos de aplicación y migración, y TLS según su topología.
 
-Si preferís **PowerShell**, el bloqueo local de scripts `.ps1` se evita ejecutando `npm.cmd` y `npx.cmd` en vez de `npm`/`npx`. No hace falta cambiar la política de ejecución del sistema. En PowerShell la carpeta puede crearse con `New-Item -ItemType Directory -Path apps -Force`.
+## PostgreSQL
 
-**Verificación obligatoria tras generar:** instalar en la raíz y ejecutar el build/lint/pruebas disponibles. Si Node 26 presenta alguna incompatibilidad real con una dependencia, registrar el error y probar con Node 24 LTS antes de cambiar otras versiones del stack.
+[Compose](../compose.yml) fija PostgreSQL 18.6-bookworm. El volumen nombrado se
+monta en /var/lib/postgresql, conforme al layout de la imagen PostgreSQL 18.
+El servicio db-test, bajo perfil test, usa otro puerto y almacenamiento temporal.
+Los puertos se publican solo en loopback.
 
-**Atención:** el CLI de Nest puede preguntar por ESM; elegirlo explícitamente. Antes de instalar dependencias, crear el `package.json` raíz con `private: true` y `workspaces: ["apps/*"]` (ver ejemplo abajo). Ambos CLI usan `--skip-git`, por lo que no deberían crear repositorios internos. Si apareciera uno, detenerse y comprobar la ruta antes de eliminar nada. No borrar el `.git` de la raíz. Los scaffolds pueden traer archivos propios como lockfiles: retirar lockfiles anidados antes del `npm install` único en la raíz.
+~~~
+npm run db:up
+npm run db:test:up
+docker compose ps
+npm run db:down
+~~~
 
-```json
-{
-  "name": "pyme-stock-manager-tpi-icsw-2026",
-  "private": true,
-  "workspaces": ["apps/*"],
-  "scripts": {
-    "dev:api": "npm run start:dev -w apps/api",
-    "dev:web": "npm run start -w apps/web",
-    "build": "npm run build -w apps/api && npm run build -w apps/web",
-    "lint:api": "npm run lint -w apps/api",
-    "test:api": "npm run test -w apps/api"
-  }
-}
-```
+db:down detiene el entorno sin borrar volúmenes. No usar down -v como rutina.
+db-test pierde datos al eliminar/recrear su contenedor. Nunca probar contra datos
+de trabajo. pg_isready comprueba disponibilidad del servidor; db:check verifica
+credenciales y consultas a través de Prisma/NestJS.
 
-### Verificaciones ya realizadas (salidas compartidas el 29/10/2026, hora local)
+Cambiar POSTGRES_PASSWORD en .env no cambia la contraseña de un clúster ya
+inicializado: requiere administración explícita y sincronizar las URL.
+No borrar el volumen para resolver esa discrepancia.
 
-- Monorepo instalado desde la raíz mediante `npm install`.
-- Eliminación de `@nestjs/mau` porque no se utilizará su servicio de despliegue: `npm uninstall -D @nestjs/mau -w apps/api`.
-- `npm audit`: **0 vulnerabilidades conocidas**, al momento de la verificación.
-- `npm run build:api` y `npm run build:web`: correctos.
-- `npm run lint`: backend y frontend sin errores.
-- `npm run test:api`: 1 prueba del scaffold aprobada; `npm run test:web`: 2 pruebas del scaffold aprobadas.
-- `npm run dev:api` y `npm run dev:web`: ambos servidores iniciaron. Apertura desde navegador pendiente de confirmar.
-- Advertencia `npm install-scripts` para cuatro paquetes: se decidió **no aprobar scripts a ciegas**, dado que build, lint y tests funcionan.
+Para verificar persistencia sin tablas artificiales, comparar el identificador
+del clúster antes y después de detener/eliminar solamente el contenedor db y
+levantarlo nuevamente conservando el volumen. La consulta es:
+SELECT system_identifier FROM pg_control_system().
+Esta comprobación administrativa es específica del entorno local.
 
-Estas comprobaciones no prueban todavía reglas de negocio, autenticación ni conexión a base de datos. Tampoco sustituyen una ejecución posterior de CI.
+## Desarrollo y contrato HTTP
 
-El próximo trabajo técnico corresponde a [Issue #2](https://github.com/NiFoox/pyme-stock-manager-tpi-icsw-2026/issues/2).
+En terminales separadas:
 
-## 4. Invariantes que probar antes de dar por listo Inventory
+~~~
+npm run dev:api
+npm run dev:web
+~~~
 
-- Sin movimiento no hay cambio de saldo.
-- No se produce stock negativo ante dos salidas concurrentes.
-- `INITIAL_BALANCE` solo puede ser primer movimiento por producto+ubicación, incluso ante dos solicitudes simultáneas.
-- Entrada concurrente desde saldo inexistente se resuelve con insert/upsert único y sin perder cantidades.
-- Producto `INACTIVE` y Location inactiva no reciben movimientos; inactivación concurrente no permite stock atrapado.
-- Ajuste con motivo obligatorio y compensación mediante movimiento nuevo.
-- Las salidas y las entradas cuentan diferente para demanda/rotación.
+- API: http://localhost:3000/api/health, respuesta 200 con {"status":"ok"}.
+- Web: http://localhost:4200, proxy /api/** hacia puerto 3000.
+  Si cambia PORT, ajustar el proxy local de Angular.
+- Para ejecutar el build: npm run start:prod -w apps/api.
 
-## 5. Gestión de documentación
+Health indica que HTTP está vivo. La API puede responder con PostgreSQL detenido
+si su configuración es válida: la conexión es diferida. db:check, después del
+build, crea un contexto NestJS, ejecuta SELECT 1 y lo cierra. Un fallo produce
+exit code 1 sin revelar la cadena de conexión. No hay readiness HTTP.
+Ver [OpenAPI](openapi.yaml).
 
-- Los documentos `analisis_...` y `registro_...` son material técnico de referencia; la bitácora oficial la redacta el equipo, sin atribuir falsamente votaciones ni fechas.
-- Corregir README: actualmente aparecen cinco nombres, las carpetas antiguas `/backend` y `/frontend`, y la transferencia se presenta como núcleo. Sabemos que el equipo real es de cuatro, pero no cuál nombre retirar.
-- Planning Poker/SP sigue pendiente; se necesita **antes de cerrar capacidad e iteraciones**, no para comenzar el bootstrap.
-- Primera estimación `148 UFP` no está metodológicamente validada; no planificar capacidad con ese número todavía.
+## Pruebas y CI
 
-## 6. Fuentes actuales
+~~~
+npm run build
+npm run lint
+npm run test:api
+npm run test:api:e2e
+npm run test:web
+npm run db:test:up
+npm run test:api:integration
+npm run test:api:runtime
+~~~
 
-- https://docs.nestjs.com/techniques/session
-- https://docs.nestjs.com/security/csrf
-- https://www.prisma.io/docs/orm/release-status
-- https://www.prisma.io/docs/v7/prisma-orm/quickstart/postgresql
-- https://angular.dev/best-practices/security
-- https://nodejs.org/en/about/previous-releases
-- https://docs.nestjs.com/cli/usages
-- https://docs.nestjs.com/migration-guide
-- https://angular.dev/cli/new
+- Unitarias API: validación de configuración, sin BD.
+- HTTP/Supertest: health y prefijo, con una URL de BD inalcanzable.
+- Integración: exige TEST_DATABASE_URL independiente y nombre terminado en _test;
+  verifica SQL mediante el servicio inyectado y PostgreSQL major 18.
+  Si falta configuración o BD, falla; no se omite silenciosamente.
+- Runtime: requiere build, inicia dist/main.js con puerto libre y BD inalcanzable,
+  consulta health y termina el proceso. Comprueba ESM compilado.
+- db:check permite verificar consultas mediante el cliente compilado.
+
+[CI](../.github/workflows/ci.yml) se ejecuta en PR hacia main y admite ejecución
+manual. Usa npm ci, build/lint/tests de ambas
+apps, PostgreSQL aislado, diagnóstico compilado y smoke HTTP compilado. Credenciales
+desechables, sin secretos del equipo. Valida Compose; el service de Actions no
+comprueba persistencia del volumen local.
+
+CI/verify pasó en GitHub el 2 de noviembre de 2026 para el
+[PR #4](https://github.com/NiFoox/pyme-stock-manager-tpi-icsw-2026/pull/4), en la
+[ejecución 41529783324](https://github.com/NiFoox/pyme-stock-manager-tpi-icsw-2026/actions/runs/41529783324).
+Ver [evidencia INFRA-01](infra-01-verificacion.md#ci-remoto-verificado).
+El PR sigue pendiente de revisión y las advertencias moderadas de minimatch
+continúan como riesgo pendiente de seguimiento; el éxito de CI no las resuelve.
+
+## Migraciones preparadas, sin modelos de negocio
+
+~~~
+npm run prisma:migrate:status
+npm run prisma:migrate:dev -- --name nombre_del_cambio
+npm run prisma:migrate:deploy
+~~~
+
+Estos comandos se usarán con un modelo aprobado. migrate dev crea cambios en
+desarrollo y necesita permisos para una shadow database, o una shadow URL dedicada
+al configurar otro entorno. Revisar y versionar el SQL real. migrate deploy aplica
+migraciones existentes en pruebas/despliegue. Ambos usan DATABASE_URL: seleccionar
+explícitamente la base destino.
+
+INFRA-01 no incluye modelos, seeds, migraciones vacías ni db push. La ruta está
+configurada; la carpeta de migraciones y su lock aparecerán con el primer cambio
+real. La reproducción completa se comprobará con ese primer modelo.
+La API nunca migra automáticamente al arrancar.
+
+## Alcance posterior
+
+Se mantienen las reglas de negocio acordadas. Identidad, sesiones/CSRF, catálogo,
+inventario, reposición, reportes, Playwright, Dockerfiles de aplicaciones y readiness
+corresponden a hitos posteriores. Las invariantes siguen en el
+[análisis arquitectónico](analisis_decisiones_arquitectonicas_v4.md) y el
+[registro técnico](registro_decisiones_menores_v4.md), sin cambios de negocio.
+No se incorporan Redis, JWT, colas ni servicios externos.
+La bitácora oficial sigue a cargo del equipo; esta guía no atribuye
+deliberaciones ni fechas de adopción.

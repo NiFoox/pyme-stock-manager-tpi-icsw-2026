@@ -4,7 +4,7 @@ Aplicación web para la gestión de inventario de una PyME dedicada a la venta d
 
 Proyecto desarrollado como Trabajo Práctico Integrador de **Ingeniería y Calidad de Software — UTN FRVT, 2026**.
 
-> **Estado:** bootstrap técnico generado y verificado localmente. Angular y NestJS compilan, superan las comprobaciones iniciales de lint y testing, y arrancan en modo desarrollo. La integración con PostgreSQL, Prisma, CI y las funcionalidades de negocio están pendientes.
+> **Estado:** bootstrap integrado mediante el [PR #3](https://github.com/NiFoox/pyme-stock-manager-tpi-icsw-2026/pull/3). INFRA-01 incorpora configuración PostgreSQL/Prisma, health y workflow de CI, pendientes de revisión. Ver [evidencia y limitaciones](docs/infra-01-verificacion.md). Las funcionalidades de negocio siguen pendientes.
 
 ## Alcance del proyecto
 
@@ -51,15 +51,14 @@ El proyecto utiliza un **monorepo con npm workspaces** sobre Node.js 26 LTS, org
 | Análisis estático frontend | Angular ESLint |
 | Control de versiones | Git y GitHub |
 | Gestión del proyecto | GitHub Issues y GitHub Projects |
+| Base de datos local | PostgreSQL 18 mediante Docker Compose |
+| ORM y migraciones | Prisma 7.10.1 con adaptador PostgreSQL |
+| Integración continua | GitHub Actions (workflow preparado) |
 
 ### Tecnologías previstas
 
 | Componente | Tecnología |
 |---|---|
-| Base de datos | PostgreSQL 18 |
-| ORM y migraciones | Prisma 7 |
-| Contenedores | Docker Compose |
-| Integración continua | GitHub Actions |
 | Pruebas E2E | Playwright |
 
 La arquitectura prevista es un **monolito modular**, con API REST y organización por funcionalidades.
@@ -89,13 +88,15 @@ No se incorporarán directorios compartidos como `packages/` ni herramientas de 
 
 ## Requisitos
 
-Para ejecutar el bootstrap actual:
+Para preparar el entorno:
 
 - Node.js 26 LTS.
 - npm compatible con Node.js 26.
 - Git.
+- Docker Desktop con motor Linux iniciado y Docker Compose v2.
 
-Para las próximas etapas de desarrollo también se utilizará Docker Desktop con Docker Compose.
+Seguir la [guía de setup](docs/setup.md) para copiar los dos ejemplos de entorno,
+configurar credenciales locales y levantar PostgreSQL. No regenerar las aplicaciones.
 
 Se recomienda utilizar NVM para administrar las versiones de Node.js.
 
@@ -112,6 +113,8 @@ Instalar las dependencias desde la raíz:
 
 ```bash
 npm ci
+npm run prisma:generate
+npm run db:up
 ```
 
 El monorepo utiliza un único `package-lock.json` en la raíz, por lo que no es necesario instalar las dependencias por separado en cada aplicación.
@@ -132,7 +135,9 @@ La aplicación NestJS estará disponible en:
 
 `http://localhost:3000`
 
-Actualmente, el endpoint inicial devuelve `Hello World!`. Será reemplazado o adaptado cuando incorporemos la API funcional y el endpoint de salud.
+`GET /api/health` responde `200 {"status":"ok"}` y comprueba únicamente disponibilidad
+HTTP. Para comprobar PostgreSQL mediante Prisma/NestJS, ejecutar `npm run build:api`
+y `npm run db:check`. Ver el [contrato OpenAPI](docs/openapi.yaml).
 
 ### Frontend
 
@@ -145,6 +150,7 @@ La aplicación Angular estará disponible en:
 `http://localhost:4200`
 
 Ambos servidores utilizan modo de desarrollo con detección de cambios.
+Angular reenvía `/api/**` al puerto 3000 de la API mediante su proxy local.
 
 ## Calidad y pruebas
 
@@ -180,7 +186,11 @@ npm run lint:web
 
 ```bash
 npm run test:api
+npm run test:api:e2e
 npm run test:web
+npm run db:test:up
+npm run test:api:integration
+npm run test:api:runtime
 ```
 
 ### Auditoría de dependencias
@@ -191,7 +201,10 @@ npm audit
 
 Durante el bootstrap inicial se verificaron satisfactoriamente las compilaciones, el análisis estático y los tests generados por las herramientas. La auditoría de dependencias finalizó sin vulnerabilidades conocidas en ese momento.
 
-Estas comprobaciones todavía no representan una validación de las funcionalidades del inventario. Se incorporarán pruebas unitarias, de integración y E2E conforme avance su implementación.
+Los tests de integración requieren `TEST_DATABASE_URL` separado de desarrollo y
+el smoke de runtime requiere build previo. Los resultados actuales están en la
+[evidencia INFRA-01](docs/infra-01-verificacion.md). Las verificaciones del bootstrap
+son antecedentes, no resultados de una ejecución nueva ni pruebas del inventario.
 
 ## Gestión del proyecto
 
@@ -236,11 +249,10 @@ El archivo [AGENTS.md](AGENTS.md) contiene instrucciones generales para los agen
 
 ## Próximos pasos
 
-- Completar la revisión y el Pull Request del bootstrap.
-- Configurar PostgreSQL mediante Docker Compose.
-- Integrar Prisma y preparar las migraciones.
-- Incorporar configuración de entorno y un endpoint de salud.
-- Configurar GitHub Actions para las verificaciones automatizadas.
+- Revisar INFRA-01 y completar las verificaciones pendientes registradas.
+- Publicar los cambios y verificar CI mediante el flujo de revisión autorizado.
+- Comprobar reproducción de migraciones con el primer modelo real; no se crean
+  entidades o migraciones artificiales para probar infraestructura.
 - Implementar progresivamente las funcionalidades P0 de acuerdo con el Product Backlog.
 
 ## Equipo
