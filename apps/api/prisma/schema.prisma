@@ -9,3 +9,32 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+enum Role {
+  ADMIN
+  OPERATOR
+}
+
+model User {
+  id           BigInt   @id @default(autoincrement())
+  username     String   @unique @db.VarChar(64)
+  passwordHash String   @map("password_hash")
+  role         Role
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@map("users")
+}
+
+// Infrastructure schema tracked by migrations, owned at runtime by connect-pg-simple.
+// Ignore in Prisma Client without losing the table during future migrate dev runs.
+model Session {
+  sid    String   @id @db.VarChar
+  sess   Json    @db.Json
+  expire DateTime @db.Timestamp(6)
+
+  @@index([expire], map: "sessions_expire_idx")
+  @@map("sessions")
+  @@ignore
+}

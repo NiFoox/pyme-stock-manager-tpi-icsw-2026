@@ -44,8 +44,10 @@ de otro checkout. Generar no necesita PostgreSQL disponible; los comandos de BD
 sí necesitan URL válida y conectividad.
 
 La configuración está en [prisma.config.ts](../apps/api/prisma.config.ts) y el
-esquema en [schema.prisma](../apps/api/prisma/schema.prisma), sin modelos ni tablas
-de prueba. No usar flags de generación tomados de otras versiones sin comprobarlos.
+esquema en [schema.prisma](../apps/api/prisma/schema.prisma). US-01 agrega usuarios y
+sesiones: seguir la [guía de autenticación](us-01-autenticacion.md) para configurar
+SESSION_SECRET, aplicar migraciones y crear el primer administrador antes de usar HTTP.
+No usar flags de generación tomados de otras versiones sin comprobarlos.
 
 ## Variables y red
 
@@ -129,6 +131,7 @@ npm run test:api
 npm run test:api:e2e
 npm run test:web
 npm run db:test:up
+npm run prisma:migrate:test
 npm run test:api:integration
 npm run test:api:runtime
 ~~~
@@ -155,7 +158,7 @@ Ver [evidencia INFRA-01](infra-01-verificacion.md#ci-remoto-verificado).
 El PR sigue pendiente de revisión y las advertencias moderadas de minimatch
 continúan como riesgo pendiente de seguimiento; el éxito de CI no las resuelve.
 
-## Migraciones preparadas, sin modelos de negocio
+## Migraciones versionadas
 
 ~~~
 npm run prisma:migrate:status
@@ -163,22 +166,22 @@ npm run prisma:migrate:dev -- --name nombre_del_cambio
 npm run prisma:migrate:deploy
 ~~~
 
-Estos comandos se usarán con un modelo aprobado. migrate dev crea cambios en
+El primer modelo se incorpora en US-01. migrate dev crea cambios en
 desarrollo y necesita permisos para una shadow database, o una shadow URL dedicada
 al configurar otro entorno. Revisar y versionar el SQL real. migrate deploy aplica
 migraciones existentes en pruebas/despliegue. Ambos usan DATABASE_URL: seleccionar
 explícitamente la base destino.
 
-INFRA-01 no incluye modelos, seeds, migraciones vacías ni db push. La ruta está
-configurada; la carpeta de migraciones y su lock aparecerán con el primer cambio
-real. La reproducción completa se comprobará con ese primer modelo.
+INFRA-01 preparó la infraestructura; US-01 incorpora la migración de usuarios y sesiones.
+`npm run prisma:migrate:test` aplica deploy exclusivamente a TEST_DATABASE_URL validada.
+No hay seeds de cuentas predeterminadas ni db push.
 La API nunca migra automáticamente al arrancar.
 
 ## Alcance posterior
 
-Se mantienen las reglas de negocio acordadas. Identidad, sesiones/CSRF, catálogo,
-inventario, reposición, reportes, Playwright, Dockerfiles de aplicaciones y readiness
-corresponden a hitos posteriores. Las invariantes siguen en el
+Se mantienen las reglas de negocio acordadas. US-01 incorpora identidad y sesiones/CSRF.
+Catálogo, inventario, reposición, reportes, Playwright, Dockerfiles de aplicaciones y
+readiness corresponden a hitos posteriores. Las invariantes siguen en el
 [análisis arquitectónico](analisis_decisiones_arquitectonicas_v4.md) y el
 [registro técnico](registro_decisiones_menores_v4.md), sin cambios de negocio.
 No se incorporan Redis, JWT, colas ni servicios externos.

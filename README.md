@@ -4,7 +4,11 @@ Aplicación web para la gestión de inventario de una PyME dedicada a la venta d
 
 Proyecto desarrollado como Trabajo Práctico Integrador de **Ingeniería y Calidad de Software — UTN FRVT, 2026**.
 
-> **Estado:** bootstrap integrado mediante el [PR #3](https://github.com/NiFoox/pyme-stock-manager-tpi-icsw-2026/pull/3). INFRA-01 incorpora configuración PostgreSQL/Prisma, health y workflow de CI, pendientes de revisión. Ver [evidencia y limitaciones](docs/infra-01-verificacion.md). Las funcionalidades de negocio siguen pendientes.
+> **Estado:** bootstrap e INFRA-01 integrados mediante los PR #3 y #4. PostgreSQL/Prisma, health y CI están configurados; ver [evidencia de infraestructura](docs/infra-01-verificacion.md). US-01 agrega autenticación, pendiente de revisión local; el resto de las funcionalidades de negocio sigue pendiente.
+
+US-01 incorpora autenticación y una interfaz mínima, pendiente de revisión local.
+Antes de iniciar HTTP, configurar `SESSION_SECRET`, aplicar migraciones y aprovisionar
+el primer administrador siguiendo la [guía de autenticación](docs/us-01-autenticacion.md).
 
 ## Alcance del proyecto
 
@@ -189,6 +193,7 @@ npm run test:api
 npm run test:api:e2e
 npm run test:web
 npm run db:test:up
+npm run prisma:migrate:test
 npm run test:api:integration
 npm run test:api:runtime
 ```
@@ -251,8 +256,8 @@ El archivo [AGENTS.md](AGENTS.md) contiene instrucciones generales para los agen
 
 - Revisar INFRA-01 y completar las verificaciones pendientes registradas.
 - Publicar los cambios y verificar CI mediante el flujo de revisión autorizado.
-- Comprobar reproducción de migraciones con el primer modelo real; no se crean
-  entidades o migraciones artificiales para probar infraestructura.
+- Revisar US-01, su primera migración real y el procedimiento de aprovisionamiento
+  descrito en la [guía de autenticación](docs/us-01-autenticacion.md).
 - Implementar progresivamente las funcionalidades P0 de acuerdo con el Product Backlog.
 
 ## Equipo
