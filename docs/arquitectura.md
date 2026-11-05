@@ -2,7 +2,10 @@
 
 **Runtime de desarrollo:** Node.js **26 LTS** (26.13.0 objetivo); Node 24 LTS como alternativa de compatibilidad.
 
-**Estado:** bootstrap integrado mediante PR #3. INFRA-01 prepara PostgreSQL 18 en Compose, Prisma 7.10.1 y CI; resultados y limitaciones en [verificación](infra-01-verificacion.md). Los módulos de dominio y sesiones siguen pendientes.
+**Estado:** bootstrap e INFRA-01 integrados mediante PR #3 y #4. PostgreSQL 18 en Compose, Prisma 7.10.1 y CI configurados; resultados previos en [verificación](infra-01-verificacion.md). US-01 implementa Identity y sesiones; el resto de los módulos de dominio está pendiente.
+
+US-01 incorpora Identity, sesiones PostgreSQL y UI mínima, pendiente de revisión;
+ver [configuración y decisiones de autenticación](us-01-autenticacion.md).
 
 ## Objetivo y alcance
 

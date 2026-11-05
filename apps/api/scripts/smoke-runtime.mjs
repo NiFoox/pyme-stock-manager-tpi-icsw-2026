@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { randomBytes } from 'node:crypto';
 import { spawn } from 'node:child_process';
 import { once } from 'node:events';
 import { createServer } from 'node:net';
@@ -19,6 +20,7 @@ const child = spawn(process.execPath, ['dist/main.js'], {
     ...process.env,
     PORT: String(port),
     NODE_ENV: 'test',
+    SESSION_SECRET: randomBytes(32).toString('hex'),
     // HTTP availability must work even with an unreachable PostgreSQL server.
     DATABASE_URL: 'postgresql://unused:unused@127.0.0.1:1/unavailable',
   },

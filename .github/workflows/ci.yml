@@ -56,6 +56,8 @@ jobs:
       - run: npm run test:api
       - run: npm run test:api:e2e
       - run: npm run test:web
+      - name: Apply versioned migrations to isolated integration database
+        run: npm run prisma:migrate:test
       - run: npm run test:api:integration
       - name: Query PostgreSQL through compiled Prisma/NestJS
         run: npm run db:check

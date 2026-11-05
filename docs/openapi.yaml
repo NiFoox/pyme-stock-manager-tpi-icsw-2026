@@ -22,3 +22,168 @@ paths:
                   status:
                     type: string
                     enum: [ok]
+  /api/auth/login:
+    post:
+      operationId: login
+      summary: Iniciar sesión con usuario y contraseña
+      description: >-
+        Regenera y persiste la sesión antes de responder. Cookie opaca pyme.sid,
+        HttpOnly, SameSite=Lax, Path=/api, Secure con HTTPS (obligatorio en producción).
+        Duración absoluta configurable, inicialmente 8 horas. Requiere mismo origen;
+        mutaciones cross-origin se rechazan mediante CSRF nativo de NestJS.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [username, password]
+              properties:
+                username:
+                  type: string
+                  minLength: 3
+                  maxLength: 64
+                  description: Se recortan extremos y se convierte a minúsculas ASCII antes de validar.
+                  pattern: "^[a-z0-9][a-z0-9._-]{2,63}$"
+                password:
+                  type: string
+                  format: password
+                  minLength: 1
+                  maxLength: 128
+      responses:
+        "200":
+          description: Sesión autenticada y persistida. Respuesta sin caché.
+          headers:
+            Set-Cookie:
+              description: Cookie opaca de sesión; el cliente no debe leer su identificador.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PublicUser"
+        "400":
+          $ref: "#/components/responses/InvalidInput"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "429":
+          description: Diez intentos de login por IP y minuto alcanzados; reintentar después.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "503":
+          $ref: "#/components/responses/Unavailable"
+        "500":
+          $ref: "#/components/responses/InternalError"
+  /api/auth/me:
+    get:
+      operationId: currentUser
+      summary: Consultar el usuario autenticado vigente
+      description: Consulta estado activo y rol actuales en PostgreSQL. No renueva la expiración.
+      security:
+        - sessionCookie: []
+      responses:
+        "200":
+          description: Usuario vigente; sin hash ni identificador de sesión. Respuesta sin caché.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PublicUser"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "503":
+          $ref: "#/components/responses/Unavailable"
+        "500":
+          $ref: "#/components/responses/InternalError"
+  /api/auth/logout:
+    post:
+      operationId: logout
+      summary: Invalidar sesión y limpiar cookie
+      description: Requiere mismo origen. También responde 204 si ya no existe sesión.
+      security: []
+      responses:
+        "204":
+          description: Sesión invalidada; cookie eliminada mediante Set-Cookie con expiración pasada.
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "503":
+          $ref: "#/components/responses/Unavailable"
+        "500":
+          $ref: "#/components/responses/InternalError"
+components:
+  securitySchemes:
+    sessionCookie:
+      type: apiKey
+      in: cookie
+      name: pyme.sid
+  schemas:
+    PublicUser:
+      type: object
+      additionalProperties: false
+      required: [id, username, role]
+      properties:
+        id:
+          type: string
+          pattern: "^[1-9][0-9]*$"
+          description: Identificador BIGINT serializado como decimal para evitar pérdida de precisión.
+        username:
+          type: string
+        role:
+          type: string
+          enum: [ADMIN, OPERATOR]
+    ApiError:
+      type: object
+      additionalProperties: false
+      required: [code, message]
+      properties:
+        code:
+          type: string
+          enum:
+            [
+              INVALID_INPUT,
+              UNAUTHORIZED,
+              FORBIDDEN,
+              NOT_FOUND,
+              TOO_MANY_REQUESTS,
+              SERVICE_UNAVAILABLE,
+              INTERNAL_ERROR,
+              HTTP_ERROR,
+            ]
+        message:
+          type: string
+  responses:
+    InternalError:
+      description: Error inesperado del servidor, sin detalles internos.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ApiError"
+    InvalidInput:
+      description: Datos de entrada inválidos.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ApiError"
+    Unauthorized:
+      description: Credenciales inválidas o sesión no válida; sin distinguir usuario ausente o inactivo.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ApiError"
+    Forbidden:
+      description: Solicitud cross-origin rechazada por CSRF.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ApiError"
+    Unavailable:
+      description: No se puede verificar o persistir la sesión; no se concede acceso.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ApiError"
